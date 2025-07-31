@@ -1,0 +1,455 @@
+---
+title: "lab3"
+output: html_document
+date: "2024-11-23"
+---
+
+```{r}
+library(openxlsx)
+file_path <- "C:/Users/дом/Downloads/Вариант66_С22-701_Бандурина.xlsx"
+sheet1 <- openxlsx::read.xlsx(file_path, sheet = 1)
+sheet2 <- openxlsx::read.xlsx(file_path, sheet = 2)
+sheet3 <- openxlsx::read.xlsx(file_path, sheet = 3)
+head(sheet1)
+head(sheet2)
+head(sheet3)
+```
+```{r}
+sheet2$'Совокупные затраты'<- sheet2$`Стоимость.системы,.тыс.руб.` + sheet2$`Стоимость.обслуживания,.тыс.руб.`*5
+expenses<- sum(sheet2$`Совокупные затраты`)
+head(sheet2)
+print(expenses)
+
+
+```
+
+```{r}
+ethylene_oxide <- sort(sheet1$Этиленоксид)
+sulfur_dioxide <- sort(sheet1$Диоксид.серы)
+chlorine <- sort(sheet1$Хлор)
+dioxine <- sort(sheet1$Диоксин)
+bromomethane <- sort(sheet1$Бромметан)
+
+
+```
+
+
+
+
+```{r}
+library(EnvStats)
+#Этиленоксид
+ethylene <- data.frame('Проверяемое распределение' = rep(0,4), 'p-value' = 0)
+#Теоретический закон нормального распределения 
+ethylene_norm <- enorm(ethylene_oxide, method = "mle/mme")
+ethylene[1,] <- c('Нормальное', ks.test(x = ethylene_oxide, y = "pnorm", mean = ethylene_norm$parameters[1], sd = ethylene_norm$parameters[2])[["p.value"]])
+
+#Теоретический закон распределения Гамма 
+ethylene_gamma <- egamma(ethylene_oxide, method = "mme")
+ethylene[2,] <- c('Гамма-распределение', ks.test(x = ethylene_oxide, y = "pgamma", shape = ethylene_gamma$parameters[1], scale = ethylene_gamma$parameters[2])[["p.value"]])
+
+#Теоретический закон экспоненциального распределения 
+ethylene_exp <- eexp(ethylene_oxide, method = "mle/mme")
+ethylene[3,] <- c('Экспоненциальное', ks.test(x = ethylene_oxide, y = "pexp", rate = ethylene_exp$parameters)[["p.value"]])
+
+#Теоретический закон распределения Вейбулла
+ethylene_weibull <- eweibull(ethylene_oxide, method = "mme")
+ethylene[4,] <- c('Вейбулла',ks.test(x = ethylene_oxide, y = "pweibull", shape = ethylene_weibull$parameters[1],
+                                     scale = ethylene_weibull$parameters[2])[["p.value"]])
+
+
+#Ни одно не подходит
+#гистограмма
+hist(ethylene_oxide,
+     xlab = 'концентрация',
+     ylab = 'плотность',
+     main = 'Гистограмма концентрации Этиленоксида',
+     col="pink",
+     border="snow",
+     breaks = 50,
+     freq = F)
+lines(density(ethylene_oxide),
+      lwd = 2)
+# эмп функция
+plot(ecdf(ethylene_oxide), main = "Эмпирическая функция распределения для Этиленоксида", 
+     xlab = "Концентрация", ylab = "Вероятность", col = "blue", lwd = 2)
+
+
+plot(ethylene_oxide, pweibull(ethylene_oxide, shape =ethylene_weibull$parameters[1],
+                                           scale = ethylene_weibull$parameters[2]), lwd = 2,type = "l", col='green',
+     xlab = "Концентрация",
+     ylab = "Вероятность",
+     main = "Теоретическая и эмпирическая функции распределения Вейбулла")
+lines(ecdf(ethylene_oxide),
+     lwd = 2, col='blue2')
+plot(ethylene_oxide, pgamma(ethylene_oxide, shape =egamma(ethylene_oxide)$parameters[1],
+                                           scale = egamma(ethylene_oxide)$parameters[2]), lwd = 2,type = "l", col='green',
+     xlab = "Концентрация",
+     ylab = "Вероятность",
+     main = "Теоретическая и эмпирическая функции распределения гамма")
+lines(ecdf(ethylene_oxide),
+     lwd = 2, col='blue2')
+plot(ethylene_oxide, pnorm(ethylene_oxide, mean = enorm(ethylene_oxide)$parameters[1], sd=enorm(ethylene_oxide)$parameters[2]),lwd = 2,type = "l", col='green',
+     xlab = "Концентрация",
+     ylab = "Вероятность",
+     main = "Теоретическая и эмпирическая функции распределения нормального")
+lines(ecdf(ethylene_oxide),
+     lwd = 2, col='blue2')
+plot(ethylene_oxide, pexp(ethylene_oxide, rate= eexp(ethylene_oxide)$parameters[1]),lwd = 2,type = "l", col='green',
+     xlab = "Концентрация",
+     ylab = "Вероятность",
+     main = "Теоретическая и эмпирическая функции распределения эксп",ylim = c(0,1))
+lines(ecdf(ethylene_oxide),
+     lwd = 2, col='blue2')
+legend("bottomright", legend = c("Эмпирическая", "Теоретическая"), col = c("blue2", "green"), lwd = 2)
+
+
+```
+
+
+
+```{r}
+library(EnvStats)
+#Диоксид серы
+sulfur <- data.frame('Проверяемое распределение' = rep(0,4), 'p-value' = 0)
+sulfur_norm <- enorm(sulfur_dioxide, method = "mle/mme")
+sulfur[1,] <- c('Нормальное', ks.test(x = sulfur_dioxide, y = "pnorm", mean = sulfur_norm$parameters[1], sd = sulfur_norm$parameters[2])[["p.value"]])
+
+#Теоретический закон распределения Гамма 
+sulfur_gamma <- egamma(sulfur_dioxide, method = "mme")
+sulfur[2,] <- c('Гамма-распределение', ks.test(x = sulfur_dioxide, y = "pgamma", shape = sulfur_gamma$parameters[1], scale = sulfur_gamma$parameters[2])[["p.value"]])
+
+#Теоретический закон экспоненциального распределения 
+sulfur_exp <- eexp(sulfur_dioxide, method = "mle/mme")
+sulfur[3,] <- c('Экспоненциальное', ks.test(x = sulfur_dioxide, y = "pexp", rate = sulfur_exp$parameters)[["p.value"]])
+
+#Теоретический закон распределения Вейбулла
+sulfur_weibull <- eweibull(sulfur_dioxide, method = "mme")
+sulfur[4,] <- c('Вейбулла',ks.test(x = sulfur_dioxide, y = "pweibull", shape = sulfur_weibull$parameters[1],
+                                     scale = sulfur_weibull$parameters[2])[["p.value"]])
+#Ни одно не подходит
+#гистограмма
+hist(sulfur_dioxide,
+     xlab = 'концентрация',
+     ylab = 'плотность',
+     main = 'Гистограмма концентрации Диоксида серы',
+     col="pink",
+     border="snow",
+     breaks = 50,
+     freq = F)
+lines(density(sulfur_dioxide, bw = .4),
+      lwd = 2)
+
+# эмп функция
+plot(ecdf(sulfur_dioxide), main = "Эмпирическая функция распределения для Диоксида серы", xlab = "Концентрация", 
+     ylab = "Вероятность", col = "blue", lwd = 2)
+
+
+plot(sulfur_dioxide, pweibull(sulfur_dioxide, shape =sulfur_weibull$parameters[1],
+                                           scale = sulfur_weibull$parameters[2]), lwd = 2,type = "l", col='green',
+     xlab = "Концентрация",
+     ylab = "Вероятность",
+     main = "Теоретическая и эмпирическая функции распределения Вейбулла")
+lines(ecdf(sulfur_dioxide),
+     lwd = 2, col='blue2')
+plot(sulfur_dioxide, pgamma(sulfur_dioxide, shape =egamma(sulfur_dioxide)$parameters[1],
+                                           scale = egamma(sulfur_dioxide)$parameters[2]), lwd = 2,type = "l", col='green',
+     xlab = "Концентрация",
+     ylab = "Вероятность",
+     main = "Теоретическая и эмпирическая функции распределения гамма")
+lines(ecdf(sulfur_dioxide),
+     lwd = 2, col='blue2')
+plot(sulfur_dioxide, pnorm(sulfur_dioxide, mean = enorm(sulfur_dioxide)$parameters[1], sd=enorm(sulfur_dioxide)$parameters[2]),lwd = 2,type = "l", col='green',
+     xlab = "Концентрация",
+     ylab = "Вероятность",
+     main = "Теоретическая и эмпирическая функции распределения нормального")
+lines(ecdf(sulfur_dioxide),
+     lwd = 2, col='blue2')
+plot(sulfur_dioxide, pexp(sulfur_dioxide, rate= eexp(sulfur_dioxide)$parameters[1]),lwd = 2,type = "l", col='green',
+     xlab = "Концентрация",
+     ylab = "Вероятность",
+     main = "Теоретическая и эмпирическая функции распределения эксп")
+lines(ecdf(sulfur_dioxide),
+     lwd = 2, col='blue2')
+legend("bottomright", legend = c("Эмпирическая", "Теоретическая"), col = c("blue2", "green"), lwd = 2)
+
+```
+```{r}
+library(EnvStats)
+#Хлор
+chlor <- data.frame('Проверяемое распределение' = rep(0,4), 'p-value' = 0)
+chlor_norm <- enorm(chlorine, method = "mle/mme")
+chlor[1,] <- c('Нормальное', ks.test(x = chlorine, y = "pnorm", mean = chlor_norm$parameters[1], sd = chlor_norm$parameters[2])[["p.value"]])
+
+#Теоретический закон распределения Гамма 
+chlor_gamma <- egamma(chlorine, method = "mme")
+chlor[2,] <- c('Гамма-распределение', ks.test(x = chlorine, y = "pgamma", shape = chlor_gamma$parameters[1], 
+                                              scale = chlor_gamma$parameters[2])[["p.value"]])
+
+#Теоретический закон экспоненциального распределения 
+chlor_exp <- eexp(chlorine, method = "mle/mme")
+chlor[3,] <- c('Экспоненциальное', ks.test(x = chlorine, y = "pexp", rate = chlor_exp$parameters)[["p.value"]])
+
+#Теоретический закон распределения Вейбулла
+chlor_weibull <- eweibull(chlorine, method = "mme")
+chlor[4,] <- c('Вейбулла',ks.test(x = chlorine, y = "pweibull", shape = chlor_weibull$parameters[1],
+                                     scale = chlor_weibull$parameters[2])[["p.value"]])
+#ни одно
+#гистограмма
+hist(chlorine,
+     xlab = 'концентрация',
+     ylab = 'плотность',
+     main = 'Гистограмма концентрации Хлора',
+     col="pink",
+     border="snow",
+     breaks = 50,
+     freq = F)
+lines(density(chlorine),
+      lwd = 2)
+# эмп функция
+plot(ecdf(chlorine), main = "Эмпирическая функция распределения для Хлора", xlab = "Концентрация", ylab = "Вероятность", col = "blue", lwd = 2)
+
+
+
+plot(chlorine, pweibull(chlorine, shape =chlor_weibull$parameters[1],
+                                           scale = chlor_weibull$parameters[2]), lwd = 2,type = "l", col='green',
+     xlab = "Концентрация",
+     ylab = "Вероятность",
+     main = "Теоретическая и эмпирическая функции распределения Вейбулла")
+lines(ecdf(chlorine),
+     lwd = 2, col='blue2')
+plot(chlorine, pgamma(chlorine, shape =egamma(chlorine)$parameters[1],
+                                           scale = egamma(chlorine)$parameters[2]), lwd = 2,type = "l", col='green',
+     xlab = "Концентрация",
+     ylab = "Вероятность",
+     main = "Теоретическая и эмпирическая функции распределения гамма")
+lines(ecdf(chlorine),
+     lwd = 2, col='blue2')
+plot(chlorine, pnorm(chlorine, mean = enorm(chlorine)$parameters[1], sd=enorm(chlorine)$parameters[2]),lwd = 2,type = "l", col='green',
+     xlab = "Концентрация",
+     ylab = "Вероятность",
+     main = "Теоретическая и эмпирическая функции распределения нормального")
+lines(ecdf(chlorine),
+     lwd = 2, col='blue2')
+plot(chlorine, pexp(chlorine, rate= eexp(chlorine)$parameters[1]),lwd = 2,type = "l", col='green',
+     xlab = "Концентрация",
+     ylab = "Вероятность",
+     main = "Теоретическая и эмпирическая функции распределения эксп",ylim =c(0,1))
+lines(ecdf(chlorine),
+     lwd = 2, col='blue2')
+legend("bottomright", legend = c("Эмпирическая", "Теоретическая"), col = c("blue2", "green"), lwd = 2)
+
+
+```
+
+
+
+```{r}
+library(EnvStats)
+#Диоксин
+diox <- data.frame('Проверяемое распределение' = rep(0,4), 'p-value' = 0)
+diox_norm <- enorm(dioxine, method = "mle/mme")
+diox[1,] <- c('Нормальное', ks.test(x = dioxine, y = "pnorm", mean = diox_norm$parameters[1], sd = diox_norm$parameters[2])[["p.value"]])
+
+#Теоретический закон распределения Гамма 
+diox_gamma <- egamma(dioxine, method = "mme")
+diox[2,] <- c('Гамма-распределение', ks.test(x = dioxine, y = "pgamma", shape = diox_gamma$parameters[1], 
+                                              scale = diox_gamma$parameters[2])[["p.value"]])
+
+#Теоретический закон экспоненциального распределения 
+diox_exp <- eexp(dioxine, method = "mle/mme")
+diox[3,] <- c('Экспоненциальное', ks.test(x = dioxine, y = "pexp", rate = diox_exp$parameters)[["p.value"]])
+
+#Теоретический закон распределения Вейбулла
+diox_weibull <- eweibull(dioxine, method = "mme")
+diox[4,] <- c('Вейбулла',ks.test(x = dioxine, y = "pweibull", shape = diox_weibull$parameters[1],
+                                     scale = diox_weibull$parameters[2])[["p.value"]])
+#ни одно
+#гистограмма
+hist(dioxine,
+     xlab = 'концентрация',
+     ylab = 'плотность',
+     main = 'Гистограмма концентрации Диоксина',
+     col="pink",
+     border="snow",
+     breaks = 50,
+     freq = F)
+lines(density(dioxine),
+      lwd = 2)
+# эмп функция
+plot(ecdf(dioxine), main = "Эмпирическая функция распределения для Диоксина", xlab = "Концентрация", ylab = "Вероятность", col = "blue", lwd = 2)
+
+
+
+plot(dioxine, pweibull(dioxine, shape =diox_weibull$parameters[1],
+                                           scale = diox_weibull$parameters[2]), lwd = 2,type = "l", col='green',
+     xlab = "Концентрация",
+     ylab = "Вероятность",
+     main = "Теоретическая и эмпирическая функции распределения Вейбулла")
+lines(ecdf(dioxine),
+     lwd = 2, col='blue2')
+plot(dioxine, pgamma(dioxine, shape =egamma(dioxine)$parameters[1],
+                                           scale = egamma(dioxine)$parameters[2]), lwd = 2,type = "l", col='green',
+     xlab = "Концентрация",
+     ylab = "Вероятность",
+     main = "Теоретическая и эмпирическая функции распределения гамма")
+lines(ecdf(dioxine),
+     lwd = 2, col='blue2')
+plot(dioxine, pnorm(dioxine, mean = enorm(dioxine)$parameters[1], sd=enorm(dioxine)$parameters[2]),lwd = 2,type = "l", col='green',
+     xlab = "Концентрация",
+     ylab = "Вероятность",
+     main = "Теоретическая и эмпирическая функции распределения нормального")
+lines(ecdf(dioxine),
+     lwd = 2, col='blue2')
+plot(dioxine, pexp(dioxine, rate= eexp(dioxine)$parameters[1]),lwd = 2,type = "l", col='green',
+     xlab = "Концентрация",
+     ylab = "Вероятность",
+     main = "Теоретическая и эмпирическая функции распределения эксп",ylim =c(0,1))
+lines(ecdf(dioxine),
+     lwd = 2, col='blue2')
+legend("bottomright", legend = c("Эмпирическая", "Теоретическая"), col = c("blue2", "green"), lwd = 2)
+
+
+```
+
+
+```{r}
+library(EnvStats)
+#Бромметан
+brom <- data.frame('Проверяемое распределение' = rep(0,4), 'p-value' = 0)
+brom_norm <- enorm(bromomethane, method = "mle/mme")
+brom[1,] <- c('Нормальное', ks.test(x = bromomethane, y = "pnorm", mean = brom_norm$parameters[1], sd = brom_norm$parameters[2])[["p.value"]])
+
+#Теоретический закон распределения Гамма 
+brom_gamma <- egamma(bromomethane, method = "mme")
+brom[2,] <- c('Гамма-распределение', ks.test(x = bromomethane, y = "pgamma", shape = brom_gamma$parameters[1], 
+                                              scale = brom_gamma$parameters[2])[["p.value"]])
+
+#Теоретический закон экспоненциального распределения 
+brom_exp <- eexp(bromomethane, method = "mle/mme")
+brom[3,] <- c('Экспоненциальное', ks.test(x = bromomethane, y = "pexp", rate = brom_exp$parameters)[["p.value"]])
+
+#Теоретический закон распределения Вейбулла
+brom_weibull <- eweibull(bromomethane, method = "mme")
+brom[4,] <- c('Вейбулла',ks.test(x = bromomethane, y = "pweibull", shape = brom_weibull$parameters[1],
+                                     scale = brom_weibull$parameters[2])[["p.value"]])
+#ни одно
+#гистограмма
+hist(bromomethane,
+     xlab = 'концентрация',
+     ylab = 'плотнось',
+     main = 'Гистограмма концентрации Бромметана',
+     col="pink",
+     border="snow",
+     breaks = 50,
+     freq = F)
+lines(density(bromomethane),
+      lwd = 2)
+# эмп функция
+plot(ecdf(bromomethane), main = "Эмпирическая функция распределения для Бромметана", xlab = "Концентрация", ylab = "Вероятность", col = "blue", lwd = 2)
+
+
+plot(bromomethane, pweibull(bromomethane, shape =brom_weibull$parameters[1],
+                                           scale = brom_weibull$parameters[2]), lwd = 2,type = "l", col='green',
+     xlab = "Концентрация",
+     ylab = "Вероятность",
+     main = "Теоретическая и эмпирическая функции распределения Вейбулла")
+lines(ecdf(bromomethane),
+     lwd = 2, col='blue2')
+plot(bromomethane, pgamma(bromomethane, shape =egamma(bromomethane)$parameters[1],
+                                           scale = egamma(bromomethane)$parameters[2]), lwd = 2,type = "l", col='green',
+     xlab = "Концентрация",
+     ylab = "Вероятность",
+     main = "Теоретическая и эмпирическая функции распределения гамма")
+lines(ecdf(bromomethane),
+     lwd = 2, col='blue2')
+plot(bromomethane, pnorm(bromomethane, mean = enorm(bromomethane)$parameters[1], sd=enorm(bromomethane)$parameters[2]),lwd = 2,type = "l", col='green',
+     xlab = "Концентрация",
+     ylab = "Вероятность",
+     main = "Теоретическая и эмпирическая функции распределения нормального")
+lines(ecdf(bromomethane),
+     lwd = 2, col='blue2')
+plot(bromomethane, pexp(bromomethane, rate= eexp(bromomethane)$parameters[1]),lwd = 2,type = "l", col='green',
+     xlab = "Концентрация",
+     ylab = "Вероятность",
+     main = "Теоретическая и эмпирическая функции распределения эксп",ylim =c(0,1))
+lines(ecdf(bromomethane),
+     lwd = 2, col='blue2')
+legend("bottomright", legend = c("Эмпирическая", "Теоретическая"), col = c("blue2", "green"), lwd = 2)
+
+```
+
+
+
+```{r}
+#7point
+library(EnvStats)
+sheet2$`Вероятность суточного штрафа при наиболее неблагоприятном ветре` <- c(
+1-ecdf(ethylene_oxide*0.9)(sheet2[1,3]),
+1-ecdf(sulfur_dioxide*0.9)(sheet2[2,3]),
+1-ecdf(chlorine*0.9)(sheet2[3,3]),
+1-ecdf(dioxine*0.9)(sheet2[4,3]),
+1-ecdf(bromomethane*0.9)(sheet2[5,3]))
+
+```
+
+
+```{r}
+#8point
+sheet2$'Cовокупный штраф при условии наиболее неблагоприятного ветра' <- 
+  sheet2[,4]*sheet2[,8]*365*5
+
+```
+
+
+```{r}
+#9point
+filtered_sheet2 <- sheet2[sheet2$`Cовокупный штраф при условии наиболее неблагоприятного ветра` > sheet2$`Совокупные затраты`, ]
+
+```
+
+```{r}
+#10point
+library(EnvStats)
+sheet3$'Оценка эффективности' <- c(0,0.25,0.5,0.9,0.75,0.4,0.1,0)
+filtered_sheet2$`Полная вероятность суточного штрафа` <- 0
+for (i in 2:7){
+  filtered_sheet2[,10]=filtered_sheet2[,10]+c(
+    (1-ecdf(ethylene_oxide*sheet3[i,3])(filtered_sheet2[1,3]))*sheet3[i,2]/365,
+    (1-ecdf(sulfur_dioxide*sheet3[i,3])(filtered_sheet2[2,3]))*sheet3[i,2]/365,
+    (1-ecdf(chlorine*sheet3[i,3])(filtered_sheet2[3,3]))*sheet3[i,2]/365,
+    (1-ecdf(dioxine*sheet3[i,3])(filtered_sheet2[4,3]))*sheet3[i,2]/365)
+}
+
+```
+
+
+```{r}
+#11point
+filtered_sheet2$'Совокупный штраф по полной вероятности' <- 
+  filtered_sheet2[,4]*filtered_sheet2[,10]*365*5
+
+```
+
+```{r}
+#12
+filtered_sheet2$'Разница между штрафом и капитальными затартами' <- 
+  filtered_sheet2[,11]-filtered_sheet2[,7]
+
+```
+
+```{r}
+#13Сделать вывод о стратегии по каждому типу вредных веществ.
+Strategy <- filtered_sheet2[,c(1,7,11,12)]
+for (i in 1:4){
+  if(Strategy[i,4] < 0){ 
+    Strategy$"Стратегия"[i] = "Не устанавливаем очистительные сооружения"
+
+  }else{
+    Strategy$"Стратегия"[i] = "Устанавливаем очистительные сооружения"
+
+  }
+}
+
+
+```
